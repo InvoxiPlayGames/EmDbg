@@ -33,105 +33,114 @@ namespace EmDbg
         // options
         public bool ReportDebugLogs = true;
 
+        public bool PulseNotify()
+        {
+            if (notifyConnection == null) return false;
+            // wait for bytes available on our socket, return to avoid stalling
+            if (!notifyConnection.BytesAvailable()) return false;
+            // parse the arguments
+            XboxArguments args = new XboxArguments(notifyConnection.ReadLine());
+            // if the program has set a handler for raw messages, send it over
+            if (cbRawNotifyMessageHandler != null)
+                cbRawNotifyMessageHandler(args);
+            // send a callback depending on the message recieved
+            // the first command will always be the type of the message
+            switch (args.commands[0])
+            {
+                case "debugstr":
+                    // if we actually have a string, send it to our callback
+                    if (cbDebugString != null && args.stringValues.ContainsKey("string"))
+                        cbDebugString(new ThreadInfo(), args.stringValues["string"], args.commands.Contains("lf"));
+                    break;
+                case "execution":
+                    // report execution state in full if the user wants
+                    if (ReportDebugLogs && cbDebugString != null)
+                        cbDebugString(null, $"[EmDbg] Execution: '{args.commands[1]}'", true);
+                    // if we're rebooting, make sure we drop all connections
+                    if (args.commands[1] == "rebooting")
+                    {
+                        shouldDisconnect = true;
+                        if (cbRebooting != null)
+                            cbRebooting(false);
+                    }
+                    // otherwise, let our callback know the state has changed
+                    else if (cbExecutionStateChange != null)
+                        cbExecutionStateChange(!args.commands.Contains("stopped"));
+                    break;
+                case "exception":
+                    if (cbExceptionHit != null)
+                    {
+                        // parse the exception into our struct and throw it
+                        ExceptionInfo exception = new();
+                        exception.exceptType = args.intValues["code"];
+                        exception.thread = args.intValues["thread"];
+                        exception.exceptAddress = args.intValues["address"];
+                        if (args.intValues.ContainsKey("read")) // invalid read
+                            exception.responsibleAddress = args.intValues["read"];
+                        else if (args.intValues.ContainsKey("write")) // invalid write
+                            exception.responsibleAddress = args.intValues["write"];
+                        // TODO: handle nparam/params from non-data exceptions
+                        exception.first = args.commands.Contains("first");
+                        exception.noncont = args.commands.Contains("noncont");
+                        exception.stopped = true; //args.commands.Contains("stop"); - i dont know bro
+                        cbExceptionHit(exception);
+                    }
+                    break;
+                case "break":
+                    if (cbBreakpointHit != null)
+                    {
+                        // parse the breakpoint into our struct and throw it
+                        Breakpoint bp = new();
+                        bp.type = BreakpointType.EXECUTE;
+                        bp.breakAddr = args.intValues["addr"];
+                        bp.thread = args.intValues["thread"];
+                        bp.stopped = args.commands.Contains("stop");
+                        bp.length = 0x4; // if its an instruction its always 0x4
+                        cbBreakpointHit(bp);
+                    }
+                    break;
+                case "databreak":
+                    if (cbBreakpointHit != null)
+                    {
+                        // parse the breakpoint into our struct and throw it
+                        Breakpoint bp = new();
+                        if (args.intValues.ContainsKey("read"))
+                        {
+                            bp.type = BreakpointType.READ;
+                            bp.dataAddr = args.intValues["read"];
+                        }
+                        else if (args.intValues.ContainsKey("readwrite"))
+                        {
+                            bp.type = BreakpointType.READWRITE;
+                            bp.dataAddr = args.intValues["readwrite"];
+                        }
+                        else if (args.intValues.ContainsKey("execute"))
+                        {
+                            bp.type = BreakpointType.EXECUTE;
+                            bp.dataAddr = args.intValues["execute"];
+                        }
+                        bp.breakAddr = args.intValues["addr"];
+                        bp.thread = args.intValues["thread"];
+                        bp.stopped = args.commands.Contains("stop");
+                        bp.length = 0x0; // no idea??
+                        cbBreakpointHit(bp);
+                    }
+                    break;
+                default:
+                    if (ReportDebugLogs && cbDebugString != null)
+                        cbDebugString(null, $"[EmDbg] Unknown XBDM notification '{args.commands[0]}'", true);
+                    break;
+            }
+            return true;
+        }
+
         private void NotifyThread()
         {
             if (notifyConnection == null) return;
             while (!shouldDisconnect)
             {
-                // wait for bytes available on our socket, sleep to avoid 100% CPU usage
-                while (!notifyConnection.BytesAvailable()) Thread.Sleep(10);
-                // parse the arguments
-                XboxArguments args = new XboxArguments(notifyConnection.ReadLine());
-                // if the program has set a handler for raw messages, send it over
-                if (cbRawNotifyMessageHandler != null)
-                    cbRawNotifyMessageHandler(args);
-                // send a callback depending on the message recieved
-                // the first command will always be the type of the message
-                switch (args.commands[0])
-                {
-                    case "debugstr":
-                        // if we actually have a string, send it to our callback
-                        if (cbDebugString != null && args.stringValues.ContainsKey("string"))
-                            cbDebugString(new ThreadInfo(), args.stringValues["string"], args.commands.Contains("lf"));
-                        break;
-                    case "execution":
-                        // report execution state in full if the user wants
-                        if (ReportDebugLogs && cbDebugString != null)
-                            cbDebugString(null, $"[EmDbg] Execution: '{args.commands[1]}'", true);
-                        // if we're rebooting, make sure we drop all connections
-                        if (args.commands[1] == "rebooting")
-                        {
-                            shouldDisconnect = true;
-                            if (cbRebooting != null)
-                                cbRebooting(false);
-                        }
-                        // otherwise, let our callback know the state has changed
-                        else if (cbExecutionStateChange != null)
-                            cbExecutionStateChange(!args.commands.Contains("stopped"));
-                        break;
-                    case "exception":
-                        if (cbExceptionHit != null)
-                        {
-                            // parse the exception into our struct and throw it
-                            ExceptionInfo exception = new();
-                            exception.exceptType = args.intValues["code"];
-                            exception.thread = args.intValues["thread"];
-                            exception.exceptAddress = args.intValues["address"];
-                            if (args.intValues.ContainsKey("read")) // invalid read
-                                exception.responsibleAddress = args.intValues["read"];
-                            else if (args.intValues.ContainsKey("write")) // invalid write
-                                exception.responsibleAddress = args.intValues["write"];
-                            // TODO: handle nparam/params from non-data exceptions
-                            exception.first = args.commands.Contains("first");
-                            exception.noncont = args.commands.Contains("noncont");
-                            exception.stopped = true; //args.commands.Contains("stop"); - i dont know bro
-                            cbExceptionHit(exception);
-                        }
-                        break;
-                    case "break":
-                        if (cbBreakpointHit != null)
-                        {
-                            // parse the breakpoint into our struct and throw it
-                            Breakpoint bp = new();
-                            bp.type = BreakpointType.EXECUTE;
-                            bp.breakAddr = args.intValues["addr"];
-                            bp.thread = args.intValues["thread"];
-                            bp.stopped = args.commands.Contains("stop");
-                            bp.length = 0x4; // if its an instruction its always 0x4
-                            cbBreakpointHit(bp);
-                        }
-                        break;
-                    case "databreak":
-                        if (cbBreakpointHit != null)
-                        {
-                            // parse the breakpoint into our struct and throw it
-                            Breakpoint bp = new();
-                            if (args.intValues.ContainsKey("read"))
-                            {
-                                bp.type = BreakpointType.READ;
-                                bp.dataAddr = args.intValues["read"];
-                            } else if (args.intValues.ContainsKey("readwrite"))
-                            {
-                                bp.type = BreakpointType.READWRITE;
-                                bp.dataAddr = args.intValues["readwrite"];
-                            }
-                            else if (args.intValues.ContainsKey("execute"))
-                            {
-                                bp.type = BreakpointType.EXECUTE;
-                                bp.dataAddr = args.intValues["execute"];
-                            }
-                            bp.breakAddr = args.intValues["addr"];
-                            bp.thread = args.intValues["thread"];
-                            bp.stopped = args.commands.Contains("stop");
-                            bp.length = 0x0; // no idea??
-                            cbBreakpointHit(bp);
-                        }
-                        break;
-                    default:
-                        if (ReportDebugLogs && cbDebugString != null)
-                            cbDebugString(null, $"[EmDbg] Unknown XBDM notification '{args.commands[0]}'", true);
-                        break;
-                }
+                // pulse for new notifications
+                if (!PulseNotify()) Thread.Sleep(10);
             }
             notifyConnection.Dispose();
             callerConnection.Dispose();
@@ -385,7 +394,7 @@ namespace EmDbg
             // todo: fpu, vectors
         }
 
-        public void SubscribeNotifications()
+        public void SubscribeNotifications(bool no_thread = false)
         {
             notifyConnection = new(console);
             XboxArguments arg = new("notify");
@@ -395,7 +404,7 @@ namespace EmDbg
             {
                 throw new Exception($"Could not start notification thread on Xbox; console returned {resp.statusCode}: {resp.message}");
             }
-            Task.Run(NotifyThread);
+            if (!no_thread) Task.Run(NotifyThread);
         }
 
         public XboxDebugger(Xbox360 xbox) {
@@ -419,8 +428,6 @@ namespace EmDbg
             arg = new("stopon");
             arg.commands.Add("fce");
             callerConnection.Command(arg);
-            // start up a notification socket on another thread
-            Task.Run(NotifyThread);
         }
     }
 }

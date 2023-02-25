@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmDbg.WinForms", "EmDbg.WinForms\EmDbg.WinForms.csproj", "{1C8231FB-CE24-4C80-83F8-9A11D3D31845}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmDbg.WinForms", "EmDbg.WinForms\EmDbg.WinForms.csproj", "{1C8231FB-CE24-4C80-83F8-9A11D3D31845}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmDbg", "EmDbg\EmDbg.csproj", "{C42C5944-DE83-4B2B-B082-0B6D284B365B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EmDbg", "EmDbg\EmDbg.csproj", "{C42C5944-DE83-4B2B-B082-0B6D284B365B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeighborSharp", "NeighborSharp\NeighborSharp\NeighborSharp.csproj", "{0318EFED-A6BB-4A45-A756-C2D3BDFDD327}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmDbg.ImGuiUI", "EmDbg.ImGui\EmDbg.ImGuiUI.csproj", "{95CDFC69-6D25-4D80-9C1B-99A824573305}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{0318EFED-A6BB-4A45-A756-C2D3BDFDD327}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0318EFED-A6BB-4A45-A756-C2D3BDFDD327}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0318EFED-A6BB-4A45-A756-C2D3BDFDD327}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95CDFC69-6D25-4D80-9C1B-99A824573305}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95CDFC69-6D25-4D80-9C1B-99A824573305}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95CDFC69-6D25-4D80-9C1B-99A824573305}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95CDFC69-6D25-4D80-9C1B-99A824573305}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
