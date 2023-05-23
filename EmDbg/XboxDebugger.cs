@@ -425,9 +425,13 @@ namespace EmDbg
                 throw new Exception($"Could not start debugging session on Xbox; console returned {resp.statusCode}: {resp.message}");
             }
             // tell the console to stop on exceptions
-            arg = new("stopon");
-            arg.commands.Add("fce");
-            callerConnection.Command(arg);
+            // TODO(Emma): do we need to send this out? causes exceptions frequently on dk xbdm
+            if (isNatelxXBDM)
+            {
+                arg = new("stopon");
+                arg.commands.Add("fce");
+                callerConnection.Command(arg);
+            }
         }
     }
 }
