@@ -119,6 +119,7 @@ namespace EmDbg.ImGuiUI
             {
                 StatusWindow.ShowWindow(_debugger);
                 ConsoleWindow.ShowWindow();
+                ExceptorBreakWindow.RenderWindow();
             }
         }
     }

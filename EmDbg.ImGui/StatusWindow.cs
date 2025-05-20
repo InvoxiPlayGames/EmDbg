@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using EmDbg.Types;
 
 namespace EmDbg.ImGuiUI
 {
@@ -20,9 +21,11 @@ namespace EmDbg.ImGuiUI
             _is_running = running;
             _pending_change = true;
         }
-
         public static bool ShowWindow(XboxDebugger debugger)
         {
+            debugger.cbExceptionHit += ex => ExceptorBreakWindow.ShowExceptionWindow(ex);
+            debugger.cbBreakpointHit += bp => ExceptorBreakWindow.ShowBreakpointWindow(bp);
+
             ImGui.SetNextWindowPos(new Vector2(5, 5), ImGuiCond.Always);
             ImGui.SetNextWindowBgAlpha(0.35f);
             ImGui.Begin("Status", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.AlwaysAutoResize);
