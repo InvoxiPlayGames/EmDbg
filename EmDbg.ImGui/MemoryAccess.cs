@@ -141,6 +141,10 @@ public class MemoryAccess
     // Will return null if any of the blocks in the range are not loaded yet
     public static byte[]? GetMemory(uint address, uint size)
     {
+        if (UInt32.MaxValue - size >= address)
+        {
+            return null;
+        }
         var blocks = GetBlocksForAddressRange(address, address + size);
         var unloaded = false;
         foreach (var block in blocks)
