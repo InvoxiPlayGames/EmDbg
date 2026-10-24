@@ -116,6 +116,10 @@ public class MemoryAccess
 
     public static MemoryBlock[] GetBlocksForAddressRange(uint start, uint end)
     {
+        if (end < start)
+        {
+            return [];
+        } 
         uint startBlock = AddressToBlockIndex(start);
         uint endBlock = AddressToBlockIndex(end);
 
@@ -141,7 +145,7 @@ public class MemoryAccess
     // Will return null if any of the blocks in the range are not loaded yet
     public static byte[]? GetMemory(uint address, uint size)
     {
-        if (UInt32.MaxValue - size >= address)
+        if (UInt32.MaxValue - size <= address)
         {
             return null;
         }
