@@ -70,57 +70,16 @@ public class ThreadContextWindow
                     {
                         DisassemblyWindow.startAddress = (ctx.pc - 0x20);
                     }
+                    
+                    ImGui.TextUnformatted($"CTR: 0x{ctx.ctr:X8}");
+                    ImGui.TextUnformatted($"MSR: 0x{ctx.msr:X8}");
+                    ImGui.TextUnformatted($"CR: 0x{ctx.cr:X8}");
+                    ImGui.TextUnformatted($"XER: 0x{ctx.xer:X8}");
+                    ImGui.TextUnformatted($"LR: 0x{ctx.lr:X8}");
 
-                    if (ImGui.BeginTable("GPR", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+                    if (ImGui.CollapsingHeader("GPR", ImGuiTreeNodeFlags.DefaultOpen))
                     {
-                        ImGui.TableSetupColumn("reg", ImGuiTableColumnFlags.WidthFixed);
-                        ImGui.TableSetupColumn("value", ImGuiTableColumnFlags.WidthStretch);
-
-                        for (int i = 0; i < 32; i++)
-                        {
-                            ImGui.PushID(i);
-                            ImGui.TableNextRow();
-                            
-                            ImGui.TableSetColumnIndex(0);
-                            ImGui.TextUnformatted("r" + i);
-                            
-                            ImGui.TableSetColumnIndex(1);
-                            bool isPointer = false;
-                            
-
-                            if (ctx.gpr[i] != 0)
-                            {
-                                var pointed = MemoryAccess.GetWord((uint)ctx.gpr[i]);
-                                if (pointed != null)
-                                {
-                                    var guessString = MemoryAccess.GuessString((uint)ctx.gpr[i]);
-                                    if (ImGui.TextLink(ctx.gpr[i].ToString("X8")))
-                                    {
-                                        DisassemblyWindow.startAddress = ((uint)ctx.gpr[i] - 0x20);
-                                        MemoryViewWindow.startAddress = (((uint)ctx.gpr[i] - 0x80) / 16) * 16;
-                                    }
-                                    ImGui.SameLine();
-                                    if (guessString != null)
-                                    {
-                                        ImGui.Text($"-> \"${guessString}\"");
-                                    }
-                                    else
-                                    {
-                                        ImGui.Text("-> " + pointed.Value.ToString("X8"));
-                                    }
-
-                                    isPointer = true;
-                                }
-                            }
-
-                            if(!isPointer)
-                            {
-                                ImGui.TextUnformatted(ctx.gpr[i].ToString("X8"));
-                            }
-                            ImGui.PopID();
-                        }
-                        
-                        ImGui.EndTable();
+                        DrawGPR();
                     }
 
                     if (!contextIsCurrent)
@@ -130,6 +89,61 @@ public class ThreadContextWindow
                 }
             }
             ImGui.End();
+        }
+    }
+
+    private static void DrawGPR()
+    {
+        if (ImGui.BeginTable("GPR", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
+        {
+            ImGui.TableSetupColumn("reg", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("value", ImGuiTableColumnFlags.WidthStretch);
+
+            for (int i = 0; i < 32; i++)
+            {
+                ImGui.PushID(i);
+                ImGui.TableNextRow();
+                                
+                ImGui.TableSetColumnIndex(0);
+                ImGui.TextUnformatted("r" + i);
+                                
+                ImGui.TableSetColumnIndex(1);
+                bool isPointer = false;
+                                
+
+                if (ctx.gpr[i] != 0)
+                {
+                    var pointed = MemoryAccess.GetWord((uint)ctx.gpr[i]);
+                    if (pointed != null)
+                    {
+                        var guessString = MemoryAccess.GuessString((uint)ctx.gpr[i]);
+                        if (ImGui.TextLink(ctx.gpr[i].ToString("X8")))
+                        {
+                            DisassemblyWindow.startAddress = ((uint)ctx.gpr[i] - 0x20);
+                            MemoryViewWindow.startAddress = (((uint)ctx.gpr[i] - 0x80) / 16) * 16;
+                        }
+                        ImGui.SameLine();
+                        if (guessString != null)
+                        {
+                            ImGui.Text($"-> \"{guessString}\"");
+                        }
+                        else
+                        {
+                            ImGui.Text("-> " + pointed.Value.ToString("X8"));
+                        }
+
+                        isPointer = true;
+                    }
+                }
+
+                if(!isPointer)
+                {
+                    ImGui.TextUnformatted(ctx.gpr[i].ToString("X8"));
+                }
+                ImGui.PopID();
+            }
+                            
+            ImGui.EndTable();
         }
     }
 }

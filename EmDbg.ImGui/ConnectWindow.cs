@@ -22,7 +22,8 @@ namespace EmDbg.ImGuiUI
         {
             lock (_consoles) _consoles.Clear();
             _is_searching = true;
-            DiscoveredConsole[] consoles = Xbox360Discovery.DiscoverAllConsoles();
+            Xbox360Discovery discovery = new Xbox360Discovery();
+            DiscoveredConsole[] consoles = discovery.DiscoverAllConsoles();
             _is_searching = false;
             lock (_consoles) _consoles.AddRange(consoles);
         }

@@ -4,7 +4,7 @@ public class MemoryAccess
 {
     public static XboxDebugger currentDebugger;
     public const uint BLOCK_SIZE = 0x80;
-    public static Semaphore concurrentBlocks = new(4, 4);
+    public static Semaphore concurrentBlocks = new(3, 3);
     
     public class MemoryBlock
     {
