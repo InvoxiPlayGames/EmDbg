@@ -142,7 +142,7 @@ namespace EmDbg.ImGuiUI
                 ImGui.EndMainMenuBar();
             }
             ImGui.DockSpaceOverViewport(0);
-            ImGui.ShowDemoWindow();
+            //ImGui.ShowDemoWindow();
 
             // display connection discovery dialog
             try

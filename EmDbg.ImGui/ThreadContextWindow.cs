@@ -61,7 +61,7 @@ public class ThreadContextWindow
                 {
                     if (!contextIsCurrent)
                     {
-                        ImGui.BeginDisabled();
+                        ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0.5f);
                     }
                     ImGui.TextUnformatted("Thread 0x" + threadId.ToString("X8"));
                     ImGui.TextUnformatted("PC:");
@@ -84,7 +84,7 @@ public class ThreadContextWindow
 
                     if (!contextIsCurrent)
                     {
-                        ImGui.EndDisabled();
+                        ImGui.PopStyleVar();
                     }
                 }
             }
