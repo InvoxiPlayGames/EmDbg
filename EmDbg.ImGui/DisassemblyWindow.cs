@@ -82,6 +82,11 @@ public class DisassemblyWindow
 
                 //ImGui.InputInt("Start Address", ref startAddress);
                 var drawlist = ImGui.GetWindowDrawList();
+                uint[] stack = [];
+                if (ThreadContextWindow.contextIsCurrent)
+                {
+                    stack = ThreadContextWindow.GetStack();
+                }
 
                 if (ImGui.BeginTable("Instructions", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg))
                 {
@@ -98,12 +103,18 @@ public class DisassemblyWindow
                         ImGui.TableNextRow();
                         ImGui.TableSetColumnIndex(0);
                         var start = ImGui.GetCursorScreenPos();
-                        if (addr == highlightAddr && highlightState != InstructionHighlightState.NONE)
+                        bool inStack = stack.Contains(addr);
+                        if ((addr == highlightAddr && highlightState != InstructionHighlightState.NONE) || inStack)
                         {
                             uint color = 0x5000ffff;
                             if (highlightState == InstructionHighlightState.EXCEPTION)
                             {
                                 color = 0x500000ff;
+                            }
+
+                            if (inStack)
+                            {
+                                color = 0x50ff0000;
                             }
 
                             drawlist.AddRectFilled(new Vector2(start.X, start.Y),

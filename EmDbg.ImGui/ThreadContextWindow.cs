@@ -55,7 +55,7 @@ public class ThreadContextWindow
             {
                 if (ctx == null)
                 {
-                    ImGui.Text("Context will be shown on break or exception.");
+                    ImGui.Text("Waiting for break or exception...");
                 }
                 else
                 {
@@ -82,6 +82,11 @@ public class ThreadContextWindow
                         DrawGPR();
                     }
 
+                    if (ImGui.CollapsingHeader("Stack"))
+                    {
+                        DrawStack();
+                    }
+
                     if (!contextIsCurrent)
                     {
                         ImGui.PopStyleVar();
@@ -89,6 +94,36 @@ public class ThreadContextWindow
                 }
             }
             ImGui.End();
+        }
+    }
+
+    public static uint[] GetStack()
+    {
+        List<uint> stack = new();
+        uint stackPtr = (uint)ctx.gpr[1];
+        for (int i = 0; i < 7; i++)
+        {
+            var read = MemoryAccess.GetWord(stackPtr);
+            if (read == null) break;
+
+            stackPtr = read.Value;
+            var lr = MemoryAccess.GetWord(stackPtr - 8);
+            if (lr == null) break;
+
+            stack.Add(lr.Value);
+        }
+        return stack.ToArray();
+    }
+
+    private static void DrawStack()
+    {
+        var stack = GetStack();
+        for (int i = 0; i < stack.Length; i++)
+        {
+            if (ImGui.TextLink($"{i + 1}: 0x{stack[i]:X8}"))
+            {
+                DisassemblyWindow.startAddress = (stack[i] - 0x20);
+            }
         }
     }
 

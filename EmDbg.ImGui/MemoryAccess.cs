@@ -4,7 +4,7 @@ public class MemoryAccess
 {
     public static XboxDebugger currentDebugger;
     public const uint BLOCK_SIZE = 0x80;
-    public static Semaphore concurrentBlocks = new(3, 3);
+    public static Semaphore concurrentBlocks = new(2, 2);
     
     public class MemoryBlock
     {
@@ -180,6 +180,10 @@ public class MemoryAccess
         var val = GetMemory(address, 4);
         if (val != null)
         {
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(val);
+            }
             return BitConverter.ToUInt32(val);
         }
         return null;
