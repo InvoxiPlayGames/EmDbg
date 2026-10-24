@@ -113,6 +113,34 @@ namespace EmDbg.ImGuiUI
 
         private static void SubmitUI()
         {
+            if (ImGui.BeginMainMenuBar())
+            {
+                if (ImGui.BeginMenu("Windows", _is_connected))
+                {
+                    if (ImGui.MenuItem("Status", null, StatusWindow.Showing))
+                    {
+                        StatusWindow.Showing = !StatusWindow.Showing;
+                    }
+                    if (ImGui.MenuItem("Console", null, ConsoleWindow.Showing))
+                    {
+                        ConsoleWindow.Showing = !ConsoleWindow.Showing;
+                    }
+                    if (ImGui.MenuItem("Memory View", null, MemoryViewWindow.Showing))
+                    {
+                        MemoryViewWindow.Showing = !MemoryViewWindow.Showing;
+                    }
+                    if (ImGui.MenuItem("Dissasembly", null, DisassemblyWindow.Showing))
+                    {
+                        DisassemblyWindow.Showing = !DisassemblyWindow.Showing;
+                    }
+                    if (ImGui.MenuItem("Thread Context", null, ThreadContextWindow.Showing))
+                    {
+                        ThreadContextWindow.Showing = !ThreadContextWindow.Showing;
+                    }
+                    ImGui.EndMenu();
+                }
+                ImGui.EndMainMenuBar();
+            }
             ImGui.DockSpaceOverViewport(0);
             ImGui.ShowDemoWindow();
 
@@ -136,6 +164,7 @@ namespace EmDbg.ImGuiUI
                 ExceptionWindow.ShowWindow();
                 DisassemblyWindow.ShowWindow();
                 MemoryViewWindow.ShowWindow();
+                ThreadContextWindow.ShowWindow();
             }
 
             if (Exceptions.Count > 0)

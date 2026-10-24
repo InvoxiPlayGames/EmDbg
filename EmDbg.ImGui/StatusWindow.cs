@@ -11,6 +11,7 @@ namespace EmDbg.ImGuiUI
 {
     class StatusWindow
     {
+        public static bool Showing = true;
         private static bool _is_running = true;
         private static string _running_title = string.Empty;
         private static string _identification = string.Empty;
@@ -20,50 +21,55 @@ namespace EmDbg.ImGuiUI
         {
             _is_running = running;
             _pending_change = true;
+            if (running)
+            {
+                ThreadContextWindow.SetContextStale();
+            }
         }
         
         static string XamLoaderTerminateTitleAddr = "82c4bccc";
 
-        public static bool ShowWindow(XboxDebugger debugger)
+        public static void ShowWindow(XboxDebugger debugger)
         {
-            ImGui.Begin("Status", ImGuiWindowFlags.AlwaysAutoResize);
-            
-            // fetch console status if we need to
-            if (_pending_change)
+            if (Showing)
             {
-                _running_title = debugger.RunningTitle();
-                _identification = debugger.Identification();
-                _pending_change = false;
-            }
-            // display console status
-            ImGui.Text($"Console: {_identification}");
-            ImGui.Text($"Title: {_running_title}");
-            ImGui.Text($"State: {(_is_running ? "Running" : "Paused")}");
-            ImGui.InputText("XamLoaderTerminateTitle", ref XamLoaderTerminateTitleAddr, 8);
-            if (ImGui.Button("Terminate"))
-            {
-                var ctx = debugger.GetThreadContext(0xF9000000);
-                ctx.pc = Convert.ToUInt32(XamLoaderTerminateTitleAddr, 16);
-                debugger.SetThreadContext(0xF9000000, ctx);
-                debugger.ResumeExecution();
-            }
-            
-
-            // pause/resume button
-            if (ImGui.Button(_is_running ? "Pause" : "Resume"))
-            {
-                if (_is_running)
-                    debugger.StopExecution();
-                else
+                if (ImGui.Begin("Status", ref Showing, ImGuiWindowFlags.AlwaysAutoResize))
                 {
-                    debugger.ResumeExecution();
-                    DisassemblyWindow.highlightState = DisassemblyWindow.InstructionHighlightState.NONE;
-                }
-                    
-            }
+                    // fetch console status if we need to
+                    if (_pending_change)
+                    {
+                        _running_title = debugger.RunningTitle();
+                        _identification = debugger.Identification();
+                        _pending_change = false;
+                    }
+                    // display console status
+                    ImGui.Text($"Console: {_identification} | Title: {_running_title} | {(_is_running ? "Running" : "Paused")}");
+                    ImGui.InputText("XamLoaderTerminateTitle", ref XamLoaderTerminateTitleAddr, 8);
+                    if (ImGui.Button("Terminate"))
+                    {
+                        var ctx = debugger.GetThreadContext(0xF9000000);
+                        ctx.pc = Convert.ToUInt32(XamLoaderTerminateTitleAddr, 16);
+                        debugger.SetThreadContext(0xF9000000, ctx);
+                        debugger.ResumeExecution();
+                    }
+                    ImGui.SameLine();
+            
 
-            ImGui.End();
-            return true;
+                    // pause/resume button
+                    if (ImGui.Button(_is_running ? "Pause" : "Resume"))
+                    {
+                        if (_is_running)
+                            debugger.StopExecution();
+                        else
+                        {
+                            debugger.ResumeExecution();
+                            DisassemblyWindow.highlightState = DisassemblyWindow.InstructionHighlightState.NONE;
+                        }
+                    
+                    }
+                }
+                ImGui.End();
+            }
         }
     }
 }

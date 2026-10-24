@@ -12,13 +12,15 @@ public class ExceptionWindow
         prevException = exceptionInfo;
         DisassemblyWindow.highlightState = DisassemblyWindow.InstructionHighlightState.EXCEPTION;
         DisassemblyWindow.highlightAddr = prevException.exceptAddress;
+        ThreadContextWindow.SetThread(prevException.thread);
     }
 
     public static void ShowWindow()
     {
         if (prevException != null)
-        {   
-            if (ImGui.Begin("Exception"))
+        {
+            bool showing = true;
+            if (ImGui.Begin("Exception", ref showing))
             {
                 ImGui.Text("An exception has occurred!");
                 ImGui.Text("0x" + prevException.exceptAddress.ToString("X"));
@@ -43,6 +45,11 @@ public class ExceptionWindow
                     DisassemblyWindow.highlightState = DisassemblyWindow.InstructionHighlightState.BREAK;
                     DisassemblyWindow.highlightAddr = ctx.pc;
                 }
+            }
+            ImGui.End();
+            if (!showing)
+            {
+                prevException = null;
             }
         }
     }

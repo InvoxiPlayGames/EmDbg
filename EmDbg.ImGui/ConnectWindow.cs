@@ -40,39 +40,44 @@ namespace EmDbg.ImGuiUI
 
         public static bool ShowWindow()
         {
+            bool ret = false;
             // set the window data
             ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Once, new Vector2(0.5f, 0.5f));
             ImGui.SetNextWindowSize(new Vector2(210, 280));
-            ImGui.Begin("Select Console", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize);
-
-            // console list box
-            if (ImGui.BeginListBox("##Consoles", new Vector2(200, 200)))
+            if (ImGui.Begin("Select Console", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize))
             {
-                lock (_consoles)
+                // console list box
+                if (ImGui.BeginListBox("##Consoles", new Vector2(200, 200)))
                 {
-                    for (int i = 0; i < _consoles.Count; i++)
-                        if (ImGui.Selectable(_consoles[i].ToString(), _selected_console_index == i))
+                    lock (_consoles)
+                    {
+                        for (int i = 0; i < _consoles.Count; i++)
                         {
-                            _selected_console_index = i;
-                            _ip_address = _consoles[i].EndPoint.Address.ToString();
+                            ImGui.PushID(i);
+                            if (ImGui.Selectable(_consoles[i].ToString(), _selected_console_index == i))
+                            {
+                                _selected_console_index = i;
+                                _ip_address = _consoles[i].EndPoint.Address.ToString();
+                            }
+                            ImGui.PopID();
                         }
+                            
+                    }
+                    ImGui.EndListBox();
                 }
-                ImGui.EndListBox();
+                ImGui.InputText("##IP Address", ref _ip_address, 16);
+                if (ImGui.Button("Connect")) // if we press the button, return and have the main thread handle connections
+                    ret = true;
+                ImGui.SameLine();
+
+                // search for consoles button
+                if (_is_searching)
+                    ImGui.Text("Searching...");
+                else if (ImGui.Button("Refresh"))
+                    Search();
             }
-            ImGui.InputText("##IP Address", ref _ip_address, 16);
-            if (ImGui.Button("Connect")) // if we press the button, return and have the main thread handle connections
-                return true;
-            ImGui.SameLine();
-
-            // search for consoles button
-            if (_is_searching)
-                ImGui.Text("Searching...");
-            else if (ImGui.Button("Refresh"))
-                Search();
-
-            // end displaying the window
             ImGui.End();
-            return false;
+            return ret;
         }
     }
 }
